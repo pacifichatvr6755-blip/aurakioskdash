@@ -38,7 +38,7 @@
 
   <div id="kiosk-frame-container">
     <button class="frame-back-btn" onclick="closeAppFrame()">✕ Exit App</button>
-    <iframe id="kiosk-iframe"></iframe>
+    <iframe id="kiosk-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
   </div>
 
   <script>
@@ -56,37 +56,29 @@
     }
     
     document.addEventListener('fullscreenchange', () => { 
-      if (!document.fullscreenElement && document.getElementById('kiosk-frame-container').style.display !== 'block') {
-        toggleKiosk(false); 
-      }
+      if (!document.fullscreenElement && document.getElementById('kiosk-frame-container').style.display !== 'block') toggleKiosk(false); 
     });
 
     function launchApp(url) {
       const container = document.getElementById('kiosk-frame-container');
       const iframe = document.getElementById('kiosk-iframe');
-      iframe.src = `https://corsproxy.io{encodeURIComponent(url)}`;
       container.style.display = 'block';
+      // Uses the stable public allorigins string proxy wrapper to bypass frame constraints
+      iframe.src = `https://allorigins.win{encodeURIComponent(url)}`;
+      if (url.includes('youtube.com')) { iframe.src = 'https://youtube.com?listType=user_uploads'; }
     }
 
-    function closeAppFrame() {
-      document.getElementById('kiosk-frame-container').style.display = 'none';
-      document.getElementById('kiosk-iframe').src = 'about:blank';
-    }
+    function closeAppFrame() { document.getElementById('kiosk-frame-container').style.display = 'none'; document.getElementById('kiosk-iframe').src = 'about:blank'; }
 
     function renderApps() {
-      const grid = document.getElementById('apps-grid');
-      grid.innerHTML = '';
+      const grid = document.getElementById('apps-grid'); grid.innerHTML = '';
       apps.forEach((app, idx) => {
-        const card = document.createElement('div');
-        card.className = 'card';
+        const card = document.createElement('div'); card.className = 'card';
         card.innerHTML = `<div style="font-size:2.5rem; margin-bottom:8px;">${app.icon || '🌐'}</div><div>${app.name}</div>`;
         card.onclick = (e) => { if (!e.target.classList.contains('del-btn')) launchApp(app.url); };
         if (!app.core) {
-          const delBtn = document.createElement('button');
-          delBtn.className = 'del-btn';
-          delBtn.textContent = '✕';
-          delBtn.onclick = (e) => { e.stopPropagation(); removeApp(idx); };
-          card.appendChild(delBtn);
+          const delBtn = document.createElement('button'); delBtn.className = 'del-btn'; delBtn.textContent = '✕';
+          delBtn.onclick = (e) => { e.stopPropagation(); removeApp(idx); }; card.appendChild(delBtn);
         }
         grid.appendChild(card);
       });
@@ -97,10 +89,9 @@
       const name = document.getElementById('app-name').value, url = document.getElementById('app-url').value;
       if (name && url) { apps.push({ name, url, icon: '🌐' }); renderApps(); document.getElementById('app-name').value = ''; document.getElementById('app-url').value = ''; }
     }
-
     function removeApp(idx) { apps.splice(idx, 1); renderApps(); }
-
     setInterval(() => document.getElementById('clock').textContent = new Date().toLocaleTimeString(), 1000);
     renderApps();
   </script>
 </body></html>
+
