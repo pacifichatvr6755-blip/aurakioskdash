@@ -38,7 +38,7 @@
 
   <div id="kiosk-frame-container">
     <button class="frame-back-btn" onclick="closeAppFrame()">✕ Exit App</button>
-    <iframe id="kiosk-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    <iframe id="kiosk-iframe"></iframe>
   </div>
 
   <script>
@@ -50,16 +50,20 @@
 
     function toggleKiosk(on) {
       if (on) { document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.(); }
-      else { document.exitFullscreen?.() || document.webkitExitFullscreen?.(); closeAppFrame(); }
+      else { if(document.fullscreenElement) { document.exitFullscreen?.(); } closeAppFrame(); }
       document.getElementById('splash-view').style.display = on ? 'none' : 'flex';
       document.getElementById('dash-view').style.display = on ? 'flex' : 'none';
     }
-    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) toggleKiosk(false); });
+    
+    document.addEventListener('fullscreenchange', () => { 
+      if (!document.fullscreenElement && document.getElementById('kiosk-frame-container').style.display !== 'block') {
+        toggleKiosk(false); 
+      }
+    });
 
     function launchApp(url) {
       const container = document.getElementById('kiosk-frame-container');
       const iframe = document.getElementById('kiosk-iframe');
-      // Wraps the target URL inside a CORS-proxy bypass hook
       iframe.src = `https://corsproxy.io{encodeURIComponent(url)}`;
       container.style.display = 'block';
     }
@@ -71,13 +75,21 @@
 
     function renderApps() {
       const grid = document.getElementById('apps-grid');
-      grid.innerHTML = apps.map((app, idx) => `
-        <div class="card" onclick="if(!event.target.classList.contains('del-btn')) launchApp('${app.url}')">
-          <div style="font-size:2.5rem; margin-bottom:8px;">${app.icon || '🌐'}</div>
-          <div>${app.name}</div>
-          ${!app.core ? `<button class="del-btn" onclick="removeApp(\${idx})">✕</button>` : ''}
-        </div>
-      `).join('');
+      grid.innerHTML = '';
+      apps.forEach((app, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<div style="font-size:2.5rem; margin-bottom:8px;">${app.icon || '🌐'}</div><div>${app.name}</div>`;
+        card.onclick = (e) => { if (!e.target.classList.contains('del-btn')) launchApp(app.url); };
+        if (!app.core) {
+          const delBtn = document.createElement('button');
+          delBtn.className = 'del-btn';
+          delBtn.textContent = '✕';
+          delBtn.onclick = (e) => { e.stopPropagation(); removeApp(idx); };
+          card.appendChild(delBtn);
+        }
+        grid.appendChild(card);
+      });
       localStorage.setItem('ak_apps', JSON.stringify(apps));
     }
 
