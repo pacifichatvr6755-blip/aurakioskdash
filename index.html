@@ -63,9 +63,8 @@
       const container = document.getElementById('kiosk-frame-container');
       const iframe = document.getElementById('kiosk-iframe');
       container.style.display = 'block';
-      // Uses the stable public allorigins string proxy wrapper to bypass frame constraints
-      iframe.src = `https://allorigins.win{encodeURIComponent(url)}`;
       if (url.includes('youtube.com')) { iframe.src = 'https://youtube.com?listType=user_uploads'; }
+      else { iframe.src = `https://allorigins.win{encodeURIComponent(url)}`; }
     }
 
     function closeAppFrame() { document.getElementById('kiosk-frame-container').style.display = 'none'; document.getElementById('kiosk-iframe').src = 'about:blank'; }
@@ -94,4 +93,3 @@
     renderApps();
   </script>
 </body></html>
-
