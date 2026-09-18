@@ -12,6 +12,9 @@
   .del-btn { position:absolute; top:5px; right:5px; background:#e11d48; color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
   input, button { padding:10px; border-radius:10px; border:1px solid #475569; background:#0f172a; color:white; font-weight:600; }
   .btn-primary { background:linear-gradient(135deg, #6366f1, #4f46e5); border:none; cursor:pointer; padding:15px 35px; border-radius:50px; font-size:1.2rem; }
+  #kiosk-frame-container { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; background:#000; }
+  iframe { width:100%; height:100%; border:none; }
+  .frame-back-btn { position:fixed; bottom:20px; right:20px; z-index:100000; background:#e11d48; color:white; border:none; border-radius:30px; padding:12px 24px; font-weight:bold; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.5); }
 </style></head><body>
 
   <div id="splash-view">
@@ -33,6 +36,11 @@
     </div>
   </div>
 
+  <div id="kiosk-frame-container">
+    <button class="frame-back-btn" onclick="closeAppFrame()">✕ Exit App</button>
+    <iframe id="kiosk-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+  </div>
+
   <script>
     let apps = JSON.parse(localStorage.getItem('ak_apps')) || [
       { name: 'YouTube', url: 'https://youtube.com', icon: '📺', core: true },
@@ -42,16 +50,29 @@
 
     function toggleKiosk(on) {
       if (on) { document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.(); }
-      else { document.exitFullscreen?.() || document.webkitExitFullscreen?.(); }
+      else { document.exitFullscreen?.() || document.webkitExitFullscreen?.(); closeAppFrame(); }
       document.getElementById('splash-view').style.display = on ? 'none' : 'flex';
       document.getElementById('dash-view').style.display = on ? 'flex' : 'none';
     }
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) toggleKiosk(false); });
 
+    function launchApp(url) {
+      const container = document.getElementById('kiosk-frame-container');
+      const iframe = document.getElementById('kiosk-iframe');
+      // Wraps the target URL inside a CORS-proxy bypass hook
+      iframe.src = `https://corsproxy.io{encodeURIComponent(url)}`;
+      container.style.display = 'block';
+    }
+
+    function closeAppFrame() {
+      document.getElementById('kiosk-frame-container').style.display = 'none';
+      document.getElementById('kiosk-iframe').src = 'about:blank';
+    }
+
     function renderApps() {
       const grid = document.getElementById('apps-grid');
       grid.innerHTML = apps.map((app, idx) => `
-        <div class="card" onclick="if(!event.target.classList.contains('del-btn')) window.open('${app.url}', '_blank', 'popup=yes,fullscreen=yes')">
+        <div class="card" onclick="if(!event.target.classList.contains('del-btn')) launchApp('${app.url}')">
           <div style="font-size:2.5rem; margin-bottom:8px;">${app.icon || '🌐'}</div>
           <div>${app.name}</div>
           ${!app.core ? `<button class="del-btn" onclick="removeApp(\${idx})">✕</button>` : ''}
@@ -71,4 +92,3 @@
     renderApps();
   </script>
 </body></html>
-
