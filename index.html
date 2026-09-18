@@ -1,168 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AuraKiosk Dashboard</title>
-  <style>
-    body {
-      background-color: #0f172a;
-      color: white;
-      font-family: system-ui, -apple-system, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      overflow: hidden;
-    }
-    h1 { 
-      margin-bottom: 50px; 
-      font-size: 2.5rem; 
-      letter-spacing: -1px; 
-      font-weight: 700;
-    }
-    /* Launch Splash View */
-    #splash-view {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .launch-btn {
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      color: white;
-      border: none;
-      padding: 20px 40px;
-      font-size: 1.5rem;
-      font-weight: bold;
-      border-radius: 50px;
-      cursor: pointer;
-      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .launch-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 15px 30px rgba(99, 102, 241, 0.6);
-    }
-    /* Main Kiosk Dashboard Area */
-    #dashboard-view {
-      display: none; /* Hidden until fullscreen is active */
-      flex-direction: column;
-      align-items: center;
-    }
-    .tray { 
-      display: flex; 
-      gap: 40px; 
-    }
-    .app-card {
-      background: #1e293b;
-      padding: 35px;
-      border-radius: 24px;
-      text-align: center;
-      width: 140px;
-      cursor: pointer;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
-    }
-    .app-card:hover { 
-      transform: translateY(-8px); 
-      background: #334155;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-    }
-    .icon { 
-      font-size: 4rem; 
-      margin-bottom: 20px; 
-    }
-    .name { 
-      font-weight: 600; 
-      font-size: 1.2rem; 
-    }
-    .close-card {
-      background: #31151a;
-      border: 2px solid #e11d48;
-    }
-    .close-card:hover {
-      background: #4c1d24;
-    }
-  </style>
-</head>
-<body>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>AuraKiosk Dashboard</title>
+<style>
+  body { background:#0f172a; color:#f8fafc; font-family:system-ui, sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0; overflow:hidden; }
+  #splash-view, #dash-view { display:flex; flex-direction:column; align-items:center; width:90%; max-width:1000px; }
+  #dash-view { display:none; height:80vh; gap:20px; }
+  .header { display:flex; justify-content:space-between; width:100%; background:#1e293b; padding:15px 30px; border-radius:20px; box-sizing:border-box; font-weight:700; font-size:1.3rem; }
+  .main { display:grid; grid-template-columns:300px 1fr; gap:20px; width:100%; height:100%; }
+  .panel { background:#1e293b; border-radius:24px; padding:20px; display:flex; flex-direction:column; gap:15px; box-sizing:border-box; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:15px; align-content:start; overflow-y:auto; padding:5px; height:100%; }
+  .card { background:#0f172a; border:1px solid #334155; padding:20px 10px; border-radius:16px; text-align:center; cursor:pointer; position:relative; font-weight:600; transition:transform 0.2s; }
+  .card:hover { transform:translateY(-3px); background:#334155; }
+  .del-btn { position:absolute; top:5px; right:5px; background:#e11d48; color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  input, button { padding:10px; border-radius:10px; border:1px solid #475569; background:#0f172a; color:white; font-weight:600; }
+  .btn-primary { background:linear-gradient(135deg, #6366f1, #4f46e5); border:none; cursor:pointer; padding:15px 35px; border-radius:50px; font-size:1.2rem; }
+</style></head><body>
 
-  <!-- 1. Click to go Fullscreen Trigger -->
   <div id="splash-view">
-    <h1 style="margin-bottom: 30px;">AuraKiosk System</h1>
-    <button class="launch-btn" onclick="enterKioskMode()">🚀 Start Kiosk Mode</button>
+    <h1 style="font-size:2.5rem; margin-bottom:20px;">AuraKiosk System</h1>
+    <button class="btn-primary" onclick="toggleKiosk(true)">🚀 Initialize Station</button>
   </div>
 
-  <!-- 2. The App Tray View -->
-  <div id="dashboard-view">
-    <h1>AuraKiosk Selection</h1>
-    <div class="tray">
-      <!-- App 1: Zeta AI -->
-      <div class="app-card" onclick="launchKiosk('https://zeta-ai.io')">
-        <div class="icon">🤖</div>
-        <div class="name">Zeta</div>
+  <div id="dash-view">
+    <div class="header"><span>AURA // KIOSK</span><span id="clock" style="color:#6366f1">00:00:00 PM</span></div>
+    <div class="main">
+      <div class="panel">
+        <h3 style="margin:0; text-transform:uppercase; color:#94a3b8; font-size:0.9rem;">Manage Web Apps</h3>
+        <input type="text" id="app-name" placeholder="App Name (e.g. Google)">
+        <input type="url" id="app-url" placeholder="URL (https://...)">
+        <button onclick="addApp()" style="background:#6366f1; cursor:pointer;">➕ Add Application</button>
+        <button onclick="toggleKiosk(false)" style="background:#31151a; border:1px solid #e11d48; color:#fda4af; cursor:pointer; margin-top:auto;">✕ Close Station</button>
       </div>
-
-      <!-- App 2: Disney+ -->
-      <div class="app-card" onclick="launchKiosk('https://disneyplus.com')">
-        <div class="icon">✨</div>
-        <div class="name">Disney+</div>
-      </div>
-
-      <!-- App 3: Close Selection -->
-      <div class="app-card close-card" onclick="exitKioskMode()">
-        <div class="icon">✕</div>
-        <div class="name">Close & Exit</div>
-      </div>
+      <div class="panel"><div class="grid" id="apps-grid"></div></div>
     </div>
   </div>
 
   <script>
-    const splashView = document.getElementById('splash-view');
-    const dashboardView = document.getElementById('dashboard-view');
+    let apps = JSON.parse(localStorage.getItem('ak_apps')) || [
+      { name: 'YouTube', url: 'https://youtube.com', icon: '📺', core: true },
+      { name: 'Zeta AI', url: 'https://zeta-ai.io', icon: '🤖', core: true },
+      { name: 'Disney+', url: 'https://disneyplus.com', icon: '✨', core: true }
+    ];
 
-    // Triggers browser native fullscreen mode and swaps the UI view
-    function enterKioskMode() {
-      const docElm = document.documentElement;
-      if (docElm.requestFullscreen) {
-        docElm.requestFullscreen();
-      } else if (docElm.webkitRequestFullscreen) { /* Safari / older Chrome */
-        docElm.webkitRequestFullscreen();
-      }
-      
-      // Swap out layout frames
-      splashView.style.display = 'none';
-      dashboardView.style.display = 'flex';
+    function toggleKiosk(on) {
+      if (on) { document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.(); }
+      else { document.exitFullscreen?.() || document.webkitExitFullscreen?.(); }
+      document.getElementById('splash-view').style.display = on ? 'none' : 'flex';
+      document.getElementById('dash-view').style.display = on ? 'flex' : 'none';
+    }
+    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) toggleKiosk(false); });
+
+    function renderApps() {
+      const grid = document.getElementById('apps-grid');
+      grid.innerHTML = apps.map((app, idx) => `
+        <div class="card" onclick="if(!event.target.classList.contains('del-btn')) window.open('${app.url}', '_blank', 'popup=yes,fullscreen=yes')">
+          <div style="font-size:2.5rem; margin-bottom:8px;">${app.icon || '🌐'}</div>
+          <div>${app.name}</div>
+          ${!app.core ? `<button class="del-btn" onclick="removeApp(\${idx})">✕</button>` : ''}
+        </div>
+      `).join('');
+      localStorage.setItem('ak_apps', JSON.stringify(apps));
     }
 
-    // Opens target websites in dedicated popup windows
-    function launchKiosk(url) {
-      window.open(url, '_blank', 'popup=yes,fullscreen=yes,resizable=yes');
+    function addApp() {
+      const name = document.getElementById('app-name').value, url = document.getElementById('app-url').value;
+      if (name && url) { apps.push({ name, url, icon: '🌐' }); renderApps(); document.getElementById('app-name').value = ''; document.getElementById('app-url').value = ''; }
     }
 
-    // Drops out of browser full screen and resets layout interface
-    function exitKioskMode() {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      }
-      
-      // Reset back to main splash screen view
-      dashboardView.style.display = 'none';
-      splashView.style.display = 'flex';
-    }
+    function removeApp(idx) { apps.splice(idx, 1); renderApps(); }
 
-    // Listener to catch if someone drops out of fullscreen using the 'Esc' key manually
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement) {
-        dashboardView.style.display = 'none';
-        splashView.style.display = 'flex';
-      }
-    });
+    setInterval(() => document.getElementById('clock').textContent = new Date().toLocaleTimeString(), 1000);
+    renderApps();
   </script>
+</body></html>
 
-</body>
-</html>
